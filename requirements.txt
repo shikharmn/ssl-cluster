@@ -1,0 +1,6 @@
+hydra-core==1.1.1
+lightly==1.2.6
+pytorch_lightning==1.5.10
+scikit_learn==1.0.2
+torch==1.10.2
+torchvision==0.11.3
