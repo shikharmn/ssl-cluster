@@ -1,0 +1,5 @@
+ssl-cluster.code-workspace
+data/cifar10/*
+src/__pycache__/*
+outputs/*
+src/outputs/*

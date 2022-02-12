@@ -1,0 +1,6 @@
+defaults:
+  - files: cifar10
+  - params: cifar10
+  - _self_
+paths:
+  log: ./runs
