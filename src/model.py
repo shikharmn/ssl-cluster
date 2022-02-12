@@ -23,12 +23,12 @@ class BenchmarkModule(pl.LightningModule):
     max_accuracy attribute.
     """
 
-    def __init__(self, dataloader_kNN, gpus, cfg):
+    def __init__(self, dataloader_kNN, cfg):
         super().__init__()
         self.backbone = nn.Module()
         self.max_accuracy = 0.0
         self.dataloader_kNN = dataloader_kNN
-        self.gpus = gpus
+        self.gpus = 1 if torch.cuda.is_available() else 0
         self.classes = cfg.params.classes
         self.knn_k = cfg.params.knn_k
         self.knn_t = cfg.params.knn_t
@@ -80,12 +80,13 @@ class BenchmarkModule(pl.LightningModule):
             acc = float(total_top1 / total_num)
             if acc > self.max_accuracy:
                 self.max_accuracy = acc
+            self.log("epoch", self.current_epoch)
             self.log("kNN_accuracy", acc * 100.0, prog_bar=True)
 
 
 class SimCLRModel(BenchmarkModule):
-    def __init__(self, dataloader_kNN, gpus, cfg):
-        super().__init__(dataloader_kNN, gpus, cfg)
+    def __init__(self, dataloader_kNN, cfg):
+        super().__init__(dataloader_kNN, cfg)
 
         # create a ResNet backbone and remove the classification head
         self.max_epochs = cfg.params.epoch_count

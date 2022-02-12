@@ -3,3 +3,4 @@ data/cifar10/*
 src/__pycache__/*
 outputs/*
 src/outputs/*
+wandb/*
