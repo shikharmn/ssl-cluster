@@ -1,8 +1,8 @@
 input_size : 128
-num_ftrs : 32
-epoch_count : 800
+num_ftrs : 512
+epoch_count : 1000
 batch_size : 512
-num_workers : 4
+num_workers : 16
 knn_k : 200
 knn_t : 0.1
 classes : 10

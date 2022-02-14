@@ -1,2 +1,2 @@
-train_path : "/home/shikhar-ug/Projects/ssl-cluster/data/cifar10/test"
-test_path: "/home/shikhar-ug/Projects/ssl-cluster/data/cifar10/train"
+train_path : "/home/shikhar-ug/Projects/ssl-cluster/data/cifar10/train"
+test_path: "/home/shikhar-ug/Projects/ssl-cluster/data/cifar10/test"

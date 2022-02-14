@@ -28,10 +28,11 @@ def get_transforms(input_size):
     return collate_fn, test_transforms
 
 
-def get_data(cfg):
+def get_data(cfg, gpus=1):
     """
     This function returns the respective dataloaders.
     """
+
     collate_fn, test_transforms = get_transforms(cfg.params.input_size)
     dataset_train_simclr = lightly.data.LightlyDataset(input_dir=cfg.files.train_path)
     dataset_train_kNN = lightly.data.LightlyDataset(
@@ -44,7 +45,7 @@ def get_data(cfg):
 
     dataloader_train_simclr = torch.utils.data.DataLoader(
         dataset_train_simclr,
-        batch_size=cfg.params.batch_size,
+        batch_size=cfg.params.batch_size // gpus,
         shuffle=True,
         collate_fn=collate_fn,
         drop_last=True,
@@ -53,16 +54,15 @@ def get_data(cfg):
 
     dataloader_test = torch.utils.data.DataLoader(
         dataset_test,
-        batch_size=cfg.params.batch_size,
+        batch_size=cfg.params.batch_size // gpus,
         shuffle=False,
         drop_last=False,
         num_workers=cfg.params.num_workers,
     )
 
-    print(cfg.params.batch_size)
     dataloader_train_kNN = torch.utils.data.DataLoader(
         dataset_train_kNN,
-        batch_size=cfg.params.batch_size,
+        batch_size=cfg.params.batch_size // gpus,
         shuffle=False,
         drop_last=False,
         num_workers=cfg.params.num_workers,

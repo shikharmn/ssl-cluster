@@ -1,3 +1,4 @@
+import lightly
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
@@ -85,18 +86,20 @@ class BenchmarkModule(pl.LightningModule):
 
 
 class SimCLRModel(BenchmarkModule):
-    def __init__(self, dataloader_kNN, cfg):
+    def __init__(self, dataloader_kNN, cfg, gather_distributed=False):
         super().__init__(dataloader_kNN, cfg)
 
         # create a ResNet backbone and remove the classification head
         self.max_epochs = cfg.params.epoch_count
+        self.cfg = cfg
         resnet = torchvision.models.resnet18()
         self.backbone = nn.Sequential(*list(resnet.children())[:-1])
 
         hidden_dim = resnet.fc.in_features
+        print("Nice: ", hidden_dim)
         self.projection_head = SimCLRProjectionHead(hidden_dim, hidden_dim, 128)
 
-        self.criterion = NTXentLoss()
+        self.criterion = NTXentLoss(gather_distributed=gather_distributed)
 
     def forward(self, x):
         h = self.backbone(x).flatten(start_dim=1)
@@ -108,7 +111,7 @@ class SimCLRModel(BenchmarkModule):
         z0 = self.forward(x0)
         z1 = self.forward(x1)
         loss = self.criterion(z0, z1)
-        self.log("train_loss_ssl", loss)
+        self.log("train_loss_ssl", loss, sync_dist=True)
         return loss
 
     def optimizer_steps(
@@ -136,5 +139,43 @@ class SimCLRModel(BenchmarkModule):
         optim = torch.optim.SGD(
             self.parameters(), lr=6e-2, momentum=0.9, weight_decay=5e-4
         )
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, self.max_epochs)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optim, self.cfg.params.epoch_count
+        )
+        return [optim], [scheduler]
+
+
+class SimCLRModel2(BenchmarkModule):
+    def __init__(self, dataloader_kNN, cfg, gather_distributed=False):
+        super().__init__(dataloader_kNN, cfg.params.classes)
+        # create a ResNet backbone and remove the classification head
+        resnet = lightly.models.ResNetGenerator("resnet-18")
+        self.backbone = nn.Sequential(
+            *list(resnet.children())[:-1], nn.AdaptiveAvgPool2d(1)
+        )
+        # create a simclr model based on ResNet
+        self.cfg = cfg
+        self.resnet_simclr = lightly.models.SimCLR(
+            self.backbone, num_ftrs=cfg.params.num_ftrs
+        )
+        self.criterion = NTXentLoss(gather_distributed=gather_distributed)
+
+    def forward(self, x):
+        self.resnet_simclr(x)
+
+    def training_step(self, batch, batch_idx):
+        (x0, x1), _, _ = batch
+        x0, x1 = self.resnet_simclr(x0, x1)
+        loss = self.criterion(x0, x1)
+        self.log("train_loss_ssl", loss)
+        self.log("epoch", self.current_epoch)
+        return loss
+
+    def configure_optimizers(self):
+        optim = torch.optim.SGD(
+            self.resnet_simclr.parameters(), lr=6e-2, momentum=0.9, weight_decay=5e-4
+        )
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optim, self.cfg.params.epoch_count
+        )
         return [optim], [scheduler]

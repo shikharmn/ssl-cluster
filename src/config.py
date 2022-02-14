@@ -15,6 +15,13 @@ class Files:
 @dataclass
 class Params:
     epoch_count: int
+    input_size : int
+    num_ftrs : int
+    batch_size : int
+    num_workers : int
+    knn_k : int
+    knn_t : float
+    classes : int
 
 
 @dataclass
