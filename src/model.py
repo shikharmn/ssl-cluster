@@ -143,39 +143,3 @@ class SimCLRModel(BenchmarkModule):
             optim, self.cfg.params.epoch_count
         )
         return [optim], [scheduler]
-
-
-class SimCLRModel2(BenchmarkModule):
-    def __init__(self, dataloader_kNN, cfg, gather_distributed=False):
-        super().__init__(dataloader_kNN, cfg.params.classes)
-        # create a ResNet backbone and remove the classification head
-        resnet = lightly.models.ResNetGenerator("resnet-18")
-        self.backbone = nn.Sequential(
-            *list(resnet.children())[:-1], nn.AdaptiveAvgPool2d(1)
-        )
-        # create a simclr model based on ResNet
-        self.cfg = cfg
-        self.resnet_simclr = lightly.models.SimCLR(
-            self.backbone, num_ftrs=cfg.params.num_ftrs
-        )
-        self.criterion = NTXentLoss(gather_distributed=gather_distributed)
-
-    def forward(self, x):
-        self.resnet_simclr(x)
-
-    def training_step(self, batch, batch_idx):
-        (x0, x1), _, _ = batch
-        x0, x1 = self.resnet_simclr(x0, x1)
-        loss = self.criterion(x0, x1)
-        self.log("train_loss_ssl", loss)
-        self.log("epoch", self.current_epoch)
-        return loss
-
-    def configure_optimizers(self):
-        optim = torch.optim.SGD(
-            self.resnet_simclr.parameters(), lr=6e-2, momentum=0.9, weight_decay=5e-4
-        )
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optim, self.cfg.params.epoch_count
-        )
-        return [optim], [scheduler]

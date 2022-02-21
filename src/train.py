@@ -41,7 +41,7 @@ def main(cfg: CIFARConfig) -> None:
     wandb.watch(model, log_freq=100)
     wandb_logger = WandbLogger(project="ssl-cluster")
 
-    check_path = "/home/shikhar-ug/Projects/ssl-cluster/outputs/2022-02-13/13-49-12/None/version_None/checkpoints/epoch=60-step=5916.ckpt"
+    # check_path = "/home/shikhar-ug/Projects/ssl-cluster/outputs/2022-02-13/13-49-12/None/version_None/checkpoints/epoch=60-step=5916.ckpt"
 
     trainer = pl.Trainer(
         max_epochs=cfg.params.epoch_count,
@@ -54,7 +54,7 @@ def main(cfg: CIFARConfig) -> None:
     )
     trainer.fit(
         model,
-        ckpt_path=check_path,
+    #    ckpt_path=check_path,
         train_dataloaders=dataloader_train_simclr,
         val_dataloaders=dataloader_test,
     )
