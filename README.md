@@ -1,3 +1,3 @@
-# Clustering SSL
+# SimCLR
 
-GitHub repository for project on motivating clustering in SSL.
+Repository for SimCLR ResNet-18 CIFAR-10 implementation using Lightly AI.
